@@ -1,0 +1,110 @@
+/* ========================================
+   SISTEMA DE TEMAS - Confecciones Soledad
+   ======================================== */
+
+/* Variables Globales por Defecto */
+:root {
+    --radius: 8px;
+    --transition: all 0.3s ease;
+}
+
+/* ==================== TEMA NIÑOS ==================== */
+[data-theme="ninos"] {
+    --color-primary: #FF6B9D;
+    --color-secondary: #FEC163;
+    --color-accent: #4ECDC4;
+    --color-bg: #FFF5F7;
+    --color-text: #2D3748;
+    --color-card: #FFFFFF;
+    --font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+    --radius: 20px;
+}
+
+/* ==================== TEMA JÓVENES ==================== */
+[data-theme="jovenes"] {
+    --color-primary: #6366F1; /* Indigo moderno */
+    --color-secondary: #8B5CF6; /* Purple */
+    --color-accent: #EC4899; /* Pink vibrante */
+    --color-bg: #F9FAFB;
+    --color-text: #111827;
+    --color-card: #FFFFFF;
+    --font-family: 'Inter', -apple-system, sans-serif;
+    --radius: 12px;
+}
+
+/* ==================== TEMA ADULTOS ==================== */
+[data-theme="adultos"] {
+    --color-primary: #1E3A8A; /* Blue profesional */
+    --color-secondary: #047857; /* Green elegante */
+    --color-accent: #92400E; /* Amber oscuro */
+    --color-bg: #F3F4F6;
+    --color-text: #1F2937;
+    --color-card: #FFFFFF;
+    --font-family: 'Georgia', 'Times New Roman', serif;
+    --radius: 4px;
+}
+
+/* ==================== MODO DÍA ==================== */
+[data-mode="dia"] {
+    --mode-bg-primary: #FFFFFF;
+    --mode-bg-secondary: #F9FAFB;
+    --mode-text-primary: #1F2937;
+    --mode-text-secondary: #6B7280;
+    --mode-border: #E5E7EB;
+}
+
+/* ==================== MODO NOCHE ==================== */
+[data-mode="noche"] {
+    --mode-bg-primary: #111827;
+    --mode-bg-secondary: #1F2937;
+    --mode-text-primary: #F9FAFB;
+    --mode-text-secondary: #D1D5DB;
+    --mode-border: #374151;
+}
+
+/* ==================== ACCESIBILIDAD - TAMAÑO DE TEXTO ==================== */
+[data-text-size="normal"] {
+    font-size: 16px;
+}
+
+[data-text-size="grande"] {
+    font-size: 18px;
+}
+
+[data-text-size="muy-grande"] {
+    font-size: 20px;
+}
+
+/* ==================== ACCESIBILIDAD - ALTO CONTRASTE ==================== */
+[data-high-contrast="true"] {
+    filter: contrast(1.5) !important;
+}
+
+[data-high-contrast="true"] * {
+    border-color: currentColor !important;
+}
+
+/* ==================== APLICACIÓN DE TEMAS ==================== */
+body {
+    font-family: var(--font-family, 'Inter', sans-serif);
+    background-color: var(--mode-bg-primary, var(--color-bg,  #FFFFFF));
+    color: var(--mode-text-primary, var(--color-text, #1F2937));
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: var(--radius);
+    transition: var(--transition);
+}
+
+.card {
+    background-color: var(--mode-bg-primary, var(--color-card, #FFFFFF));
+    border-radius: var(--radius);
+    border: 1px solid var(--mode-border, #E5E7EB);
+}
+
+/* Transiciones suaves al cambiar tema */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
