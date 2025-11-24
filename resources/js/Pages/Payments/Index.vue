@@ -11,10 +11,10 @@ import { ref, computed } from 'vue';
 
 const props = defineProps({
     payments: Array,
+    qr_data: Object,
 });
 
-const page = usePage();
-const qrData = computed(() => page.props.qr_data);
+const qrData = computed(() => props.qr_data);
 
 const showModal = ref(false);
 const showQrModal = ref(false);
@@ -62,11 +62,80 @@ const closeQrModal = () => {
 };
 
 const generateQr = () => {
+    console.log('═══════════════════════════════════════════');
+    console.log('🔵 PASO 1: Iniciando generación de QR...');
+    console.log('📋 Pedido ID:', qrForm.pedido_id);
+    console.log('═══════════════════════════════════════════');
+    
     qrForm.post(route('payments.generate-qr'), {
-        onSuccess: () => {
+        onSuccess: (response) => {
+            console.log('═══════════════════════════════════════════');
+            console.log('✅ PASO 2: QR generado exitosamente');
+            console.log('🎫 ID Transacción:', response.props.qr_data?.transactionId || 'N/A');
+            console.log('⏰ Expira:', response.props.qr_data?.expirationDate || 'N/A');
+            console.log('═══════════════════════════════════════════');
+            console.log('');
+            console.log('📌 IMPORTANTE:');
+            console.log('   1. El cliente debe ESCANEAR el QR con su app bancaria');
+            console.log('   2. Después de que PAGUE, haz click en "🔍 Verificar"');
+            console.log('   3. El botón "Verificar" consultará el estado en PagoFácil');
+            console.log('═══════════════════════════════════════════');
+            
+            // Mostrar alert de éxito
+            alert('✅ QR Generado Exitosamente!\n\n' +
+                  'ID: ' + (response.props.qr_data?.transactionId || 'N/A') + '\n\n' +
+                  '📌 Después de que el cliente pague:\n' +
+                  '→ Haz click en el botón "🔍 Verificar"\n' +
+                  '→ El sistema consultará el estado del pago');
+            
             closeQrModal();
         },
+        onError: (errors) => {
+            console.log('═══════════════════════════════════════════');
+            console.error('❌ ERROR al generar QR');
+            console.error('📋 Detalles:', errors);
+            console.log('═══════════════════════════════════════════');
+            
+            alert('❌ Error al generar QR\n\n' + 
+                  (errors.error || errors.pedido_id || 'Error desconocido') + '\n\n' +
+                  'Revisa la consola (F12) para más detalles');
+        },
     });
+};
+
+const checkPaymentStatus = async (paymentId) => {
+    if (confirm('¿Consultar el estado de este pago en PagoFácil?')) {
+        console.log('═══════════════════════════════════════════');
+        console.log('🔍 CONSULTANDO ESTADO DEL PAGO');
+        console.log('💳 Pago ID:', paymentId);
+        console.log('⏳ Esperando respuesta de PagoFácil...');
+        console.log('═══════════════════════════════════════════');
+        
+        try {
+            const response = await fetch(`/payments/${paymentId}/check-status`);
+            const data = await response.json();
+            
+            console.log('═══════════════════════════════════════════');
+            console.log('📊 RESPUESTA DE PAGOFÁCIL:');
+            console.log('Estado:', data.status || 'Desconocido');
+            console.log('Mensaje:', data.message || 'Sin mensaje');
+            console.log('Detalles completos:', data);
+            console.log('═══════════════════════════════════════════');
+            
+            if (data.success) {
+                alert('✅ ' + data.message + '\n\nLa página se recargará para mostrar el nuevo estado.');
+                window.location.reload();
+            } else {
+                alert('⚠️ ' + data.message);
+            }
+        } catch (error) {
+            console.log('═══════════════════════════════════════════');
+            console.error('❌ ERROR EN LA CONSULTA');
+            console.error('Detalles:', error);
+            console.log('═══════════════════════════════════════════');
+            alert('❌ Error al consultar el estado del pago\n\nRevisa la consola (F12) para más detalles');
+        }
+    }
 };
 </script>
 
@@ -146,6 +215,13 @@ const generateQr = () => {
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ new Date(payment.fecha_pago).toLocaleDateString() }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button 
+                                                v-if="payment.metodo_pago === 'QR' && payment.qr_status === 'PENDING'"
+                                                @click="checkPaymentStatus(payment.pago_id)" 
+                                                class="text-blue-600 hover:text-blue-900 mr-4"
+                                                title="Consultar estado del pago en PagoFácil">
+                                                🔍 Verificar
+                                            </button>
                                             <button @click="deletePayment(payment.pago_id)" class="text-red-600 hover:text-red-900">Eliminar</button>
                                         </td>
                                     </tr>

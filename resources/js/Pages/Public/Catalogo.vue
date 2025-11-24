@@ -86,31 +86,6 @@
                 </svg>
                 <h3 class="text-2xl font-semibold text-gray-900 mb-2">Aún no hay trabajos publicados</h3>
                 <p class="text-gray-600 mb-6">Estamos trabajando en nuevos proyectos increíbles</p>
-                <Link :href="route('public.hacer-pedido')" class="inline-block bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg transition">
-                    Hacer un Pedido
-                </Link>
-            </div>
-
-            <!-- Paginación -->
-            <div v-if="portfolio.links && portfolio.links.length > 3" class="flex justify-center space-x-2 mt-12">
-                <Link v-for="link in portfolio.links" :key="link.label"
-                      :href="link.url"
-                      :class="[
-                          'px-4 py-2 rounded-lg font-semibold transition',
-                          link.active 
-                              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' 
-                              : 'bg-white text-gray-700 hover:bg-gray-100'
-                      ]"
-                      v-html="link.label">
-                </Link>
-            </div>
-        </div>
-
-        <!-- CTA -->
-        <div class="bg-gradient-to-r from-purple-600 to-blue-600 py-20">
-            <div class="max-w-4xl mx-auto text-center px-4">
-                <h2 class="text-4xl font-bold text-white mb-6">¿Te gustan nuestros trabajos?</h2>
-                <p class="text-xl text-purple-100 mb-8">Haz realidad tu proyecto con nosotros</p>
                 <Link :href="route('public.hacer-pedido')" class="inline-block bg-white text-purple-600 px-10 py-4 rounded-full text-lg font-bold hover:bg-purple-50 transition transform hover:scale-105">
                     Solicitar Servicio Ahora →
                 </Link>

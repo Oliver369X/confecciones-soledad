@@ -23,17 +23,39 @@ class PagoFacilService
      */
     public function authenticate()
     {
-        $response = Http::post("{$this->baseUrl}/login", [
-            'tcTokenService' => $this->tokenService,
-            'tcTokenSecret' => $this->tokenSecret,
+        \Log::info('🔑 Intentando autenticar con PagoFácil', [
+            'url' => "{$this->baseUrl}/login",
+            'has_token_service' => !empty($this->tokenService),
+            'has_token_secret' => !empty($this->tokenSecret),
+        ]);
+
+        $response = Http::withoutVerifying()
+            ->timeout(30)
+            ->withHeaders([
+                'tcTokenService' => $this->tokenService,  // ✅ Como header
+                'tcTokenSecret' => $this->tokenSecret,    // ✅ Como header
+            ])
+            ->post("{$this->baseUrl}/login");
+
+        \Log::info('🔐 Respuesta de autenticación PagoFácil', [
+            'status' => $response->status(),
+            'body' => $response->json()
         ]);
 
         if ($response->successful() && $response->json('error') === 0) {
-            return $response->json('values.accessToken'); // Ajustado según la doc: values -> accessToken
+            $token = $response->json('values.accessToken');
+            \Log::info('✅ Token obtenido exitosamente', ['token_length' => strlen($token)]);
+            return $token;
         }
+
+        \Log::error('❌ Error de autenticación', [
+            'status' => $response->status(),
+            'response' => $response->body()
+        ]);
 
         throw new Exception('Error al autenticar con PagoFácil: ' . $response->body());
     }
+
 
     /**
      * Generar QR para una transacción
@@ -42,7 +64,15 @@ class PagoFacilService
     {
         $token = $this->authenticate();
 
-        $response = Http::withToken($token)->post("{$this->baseUrl}/generate-qr", $data);
+        $response = Http::withoutVerifying()  // Deshabilitar verificación SSL
+            ->timeout(30)
+            ->withToken($token)
+            ->post("{$this->baseUrl}/generate-qr", $data);
+
+        \Log::info('🎫 Respuesta de generación de QR', [
+            'status' => $response->status(),
+            'body' => $response->json()
+        ]);
 
         if ($response->successful() && $response->json('error') === 0) {
             return $response->json('values');
@@ -50,6 +80,7 @@ class PagoFacilService
 
         throw new Exception('Error al generar QR: ' . $response->body());
     }
+
 
     /**
      * Consultar estado de transacción

@@ -32,15 +32,15 @@
                         </Link>
                         
                         <div v-if="$page.props.auth.user" class="flex items-center space-x-4">
-                            <Link :href="route('dashboard')" class="text-gray-700 hover:text-purple-600">
+                            <Link :href="route('dashboard')" class="bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition font-medium">
                                 Dashboard
                             </Link>
                         </div>
-                        <div v-else class="flex items-center space-x-4">
-                            <Link :href="route('login')" class="text-gray-700 hover:text-purple-600">
+                        <div v-else class="flex items-center space-x-3">
+                            <Link :href="route('login')" class="text-gray-700 hover:text-purple-600 transition font-medium px-4 py-2 rounded-full hover:bg-gray-100">
                                 Iniciar Sesión
                             </Link>
-                            <Link :href="route('register')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300 transition">
+                            <Link :href="route('register')" class="bg-purple-600 text-white px-6 py-2 rounded-full hover:bg-purple-700 transition font-medium shadow-md">
                                 Registrarse
                             </Link>
                         </div>

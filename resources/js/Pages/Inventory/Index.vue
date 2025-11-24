@@ -18,11 +18,11 @@ const showMovementModal = ref(false);
 const selectedItem = ref(null);
 
 const createForm = useForm({
-    nombre_material: '',
+    nombre: '',
     descripcion: '',
-    cantidad_stock: 0,
+    cantidad_stock: '0',
     unidad_medida: '',
-    costo_unitario: 0,
+    costo_unitario: '0',
 });
 
 const movementForm = useForm({
@@ -70,6 +70,11 @@ const deleteItem = (id) => {
         useForm({}).delete(route('inventory.destroy', id));
     }
 };
+
+const exportToPDF = () => {
+    window.print(); // Simple print to PDF
+};
+
 </script>
 
 <template>
@@ -82,37 +87,47 @@ const deleteItem = (id) => {
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                <div class="bg-theme-card overflow-hidden shadow-sm sm:rounded-lg border border-theme-border">
+                    <div class="p-6 text-theme-text">
                         <div class="flex justify-between mb-6">
                             <h3 class="text-lg font-medium">Materiales e Insumos</h3>
-                            <PrimaryButton @click="openCreateModal">
-                                Nuevo Material
-                            </PrimaryButton>
+                            <div class="flex gap-2">
+                                <button @click="exportToPDF" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition font-medium">
+                                    📄 Exportar PDF
+                                </button>
+                                <PrimaryButton @click="openCreateModal">
+                                    Nuevo Material
+                                </PrimaryButton>
+                            </div>
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
+                        <div class="overflow-x-auto print:overflow-visible">
+                            <div class="hidden print:block mb-8">
+                                <h1 class="text-2xl font-bold text-center mb-2">Reporte de Inventario</h1>
+                                <p class="text-center text-gray-600">Confecciones Soledad</p>
+                                <p class="text-center text-sm text-gray-500">Generado el: {{ new Date().toLocaleDateString() }}</p>
+                            </div>
+                            <table class="min-w-full divide-y divide-theme-border">
+                                <thead class="bg-theme-bg">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Material</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descripción</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Stock</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unidad</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Costo Unit.</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-theme-text opacity-70 uppercase tracking-wider">Material</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-theme-text opacity-70 uppercase tracking-wider">Descripción</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-theme-text opacity-70 uppercase tracking-wider">Stock</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-theme-text opacity-70 uppercase tracking-wider">Unidad</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-theme-text opacity-70 uppercase tracking-wider">Costo Prom.</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-theme-text opacity-70 uppercase tracking-wider print:hidden">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <tbody class="bg-theme-card divide-y divide-theme-border">
                                     <tr v-for="item in items" :key="item.item_id">
-                                        <td class="px-6 py-4 whitespace-nowrap font-medium">{{ item.nombre_material }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ item.descripcion }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap font-bold" :class="{'text-red-600': item.cantidad_stock <= 5, 'text-green-600': item.cantidad_stock > 5}">
-                                            {{ item.cantidad_stock }}
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium">{{ item.nombre }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-theme-text opacity-80">{{ item.descripcion || '-' }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap font-bold" :class="{'text-red-600': item.stock_actual <= 5, 'text-green-600': item.stock_actual > 5}">
+                                            {{ item.stock_actual }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ item.unidad_medida }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap">Bs {{ item.costo_unitario }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td class="px-6 py-4 whitespace-nowrap">Bs {{ Number(item.costo_promedio_ponderado || 0).toFixed(2) }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium print:hidden">
                                             <button @click="openMovementModal(item)" class="text-indigo-600 hover:text-indigo-900 mr-4">Movimiento</button>
                                             <button @click="deleteItem(item.item_id)" class="text-red-600 hover:text-red-900">Eliminar</button>
                                         </td>
@@ -131,9 +146,9 @@ const deleteItem = (id) => {
                 <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Registrar Nuevo Material</h2>
                 <div class="mt-6">
                     <div>
-                        <InputLabel for="nombre_material" value="Nombre del Material" />
-                        <TextInput id="nombre_material" v-model="createForm.nombre_material" type="text" class="mt-1 block w-full" required autofocus />
-                        <InputError :message="createForm.errors.nombre_material" class="mt-2" />
+                        <InputLabel for="nombre" value="Nombre del Material" />
+                        <TextInput id="nombre" v-model="createForm.nombre" type="text" class="mt-1 block w-full" required autofocus />
+                        <InputError :message="createForm.errors.nombre" class="mt-2" />
                     </div>
                     <div class="mt-4">
                         <InputLabel for="descripcion" value="Descripción" />
@@ -168,7 +183,7 @@ const deleteItem = (id) => {
         <!-- Modal Movimiento Inventario -->
         <Modal :show="showMovementModal" @close="closeMovementModal">
             <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Registrar Movimiento: {{ selectedItem?.nombre_material }}</h2>
+                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">Registrar Movimiento: {{ selectedItem?.nombre }}</h2>
                 <div class="mt-6">
                     <div>
                         <InputLabel for="tipo_movimiento" value="Tipo de Movimiento" />

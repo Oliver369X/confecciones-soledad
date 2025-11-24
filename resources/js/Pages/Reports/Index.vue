@@ -28,7 +28,12 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Reportes y Estadísticas</h2>
+            <div class="flex justify-between items-center">
+                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Reportes y Estadísticas</h2>
+                <button onclick="window.print()" class="px-4 py-2 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 rounded-md hover:opacity-80 transition text-sm font-medium">
+                    🖨️ Imprimir Reporte
+                </button>
+            </div>
         </template>
 
         <div class="py-12">
@@ -58,7 +63,7 @@ const submit = () => {
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-medium text-gray-500 dark:text-gray-400">Ingresos Totales</h3>
-                            <p class="text-3xl font-bold text-green-600 mt-2">Bs {{ stats.ingresos.toFixed(2) }}</p>
+                            <p class="text-3xl font-bold text-green-600 mt-2">Bs {{ Number(stats.ingresos || 0).toFixed(2) }}</p>
                             <p class="text-sm text-gray-500 mt-1">Pagos confirmados en el periodo</p>
                         </div>
                     </div>
@@ -67,7 +72,7 @@ const submit = () => {
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-medium text-gray-500 dark:text-gray-400">Costos de Insumos</h3>
-                            <p class="text-3xl font-bold text-red-600 mt-2">Bs {{ stats.costos.toFixed(2) }}</p>
+                            <p class="text-3xl font-bold text-red-600 mt-2">Bs {{ Number(stats.costos || 0).toFixed(2) }}</p>
                             <p class="text-sm text-gray-500 mt-1">Materiales utilizados en el periodo</p>
                         </div>
                     </div>
@@ -77,7 +82,7 @@ const submit = () => {
                         <div class="p-6">
                             <h3 class="text-lg font-medium text-gray-500 dark:text-gray-400">Rentabilidad Neta</h3>
                             <p class="text-3xl font-bold mt-2" :class="stats.rentabilidad >= 0 ? 'text-indigo-600' : 'text-red-600'">
-                                Bs {{ stats.rentabilidad.toFixed(2) }}
+                                Bs {{ Number(stats.rentabilidad || 0).toFixed(2) }}
                             </p>
                             <p class="text-sm text-gray-500 mt-1">Ingresos - Costos</p>
                         </div>

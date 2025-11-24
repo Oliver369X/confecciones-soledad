@@ -17,7 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ContadorVisitas::class, // Contador de visitas
         ]);
 
-        //
+        $middleware->validateCsrfTokens(except: [
+            'payments/callback',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

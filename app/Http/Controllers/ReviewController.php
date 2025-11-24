@@ -15,7 +15,8 @@ class ReviewController extends Controller
      */
     public function index()
     {
-        $reviews = Review::with(['cliente', 'pedido'])->orderBy('fecha_resena', 'desc')->get();
+        // Ordenar por fecha de creación (usando columna 'fecha' o 'created_at')
+        $reviews = Review::with(['cliente', 'pedido'])->orderBy('fecha', 'desc')->get();
         return Inertia::render('Reviews/Index', [
             'reviews' => $reviews
         ]);
@@ -52,7 +53,6 @@ class ReviewController extends Controller
             'cliente_id' => Auth::id(),
             'calificacion' => $request->calificacion,
             'comentario' => $request->comentario,
-            'fecha_resena' => now(),
         ]);
 
         return redirect()->back()->with('success', 'Reseña enviada exitosamente.');

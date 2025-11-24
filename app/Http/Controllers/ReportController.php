@@ -34,7 +34,7 @@ class ReportController extends Controller
         $costos = 0;
         foreach ($movimientosSalida as $movimiento) {
             if ($movimiento->item) {
-                $costos += $movimiento->cantidad * $movimiento->item->costo_unitario;
+                $costos += $movimiento->cantidad * $movimiento->item->costo_promedio_ponderado;
             }
         }
 

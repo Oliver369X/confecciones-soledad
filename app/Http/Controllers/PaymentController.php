@@ -24,9 +24,9 @@ class PaymentController extends Controller
      */
     public function index()
     {
-        $payments = Payment::with(['pedido.cliente', 'confirmadoPor'])->orderBy('fecha_pago', 'desc')->get();
         return Inertia::render('Payments/Index', [
-            'payments' => $payments
+            'payments' => Payment::with(['pedido.cliente'])->latest()->get(),
+            'qr_data' => session('qr_data'),  // ✅ Pasar qr_data de la sesión
         ]);
     }
 
@@ -70,38 +70,56 @@ class PaymentController extends Controller
      */
     public function generateQr(Request $request)
     {
+        \Log::info('🔵 Iniciando generación de QR', ['pedido_id' => $request->pedido_id]);
+
         $request->validate([
             'pedido_id' => 'required|exists:pedidos,pedido_id',
         ]);
 
         $pedido = Order::with('cliente')->findOrFail($request->pedido_id);
+        \Log::info('📦 Pedido encontrado', [
+            'pedido_id' => $pedido->pedido_id,
+            'cliente' => $pedido->cliente->nombre_completo,
+            'total' => $pedido->presupuesto_total
+        ]);
         
         // Calcular saldo pendiente
         $total_pagado = $pedido->pagos()->sum('monto');
         $total_a_pagar = $pedido->presupuesto_total - $pedido->monto_descuento;
         $saldo_pendiente = $total_a_pagar - $total_pagado;
 
+        \Log::info('💰 Cálculo de saldo', [
+            'total_a_pagar' => $total_a_pagar,
+            'total_pagado' => $total_pagado,
+            'saldo_pendiente' => $saldo_pendiente
+        ]);
+
         if ($saldo_pendiente <= 0) {
+            \Log::warning('⚠️ Saldo pendiente es 0 o negativo');
             return redirect()->back()->withErrors(['pedido_id' => 'Este pedido ya está completamente pagado.']);
         }
 
         try {
             // Generar ID de transacción único
             $companyTransactionId = 'CONF-' . $pedido->pedido_id . '-' . time();
+            
+            \Log::info('🔑 ID de transacción generado', ['company_transaction_id' => $companyTransactionId]);
 
             // Preparar datos para PagoFácil
             $qrData = [
                 'paymentMethod' => 4, // QR Simple (según la documentación)
                 'clientName' => $pedido->cliente->nombre_completo,
                 'documentType' => 1, // CI
-                'documentId' => '000000', // Placeholder - deberías tener este campo en el modelo User
-                'phoneNumber' => $pedido->cliente->telefono ?? '00000000',
+                'documentId' => '123456',
+                'phoneNumber' => $pedido->cliente->telefono ?? '68947764',
                 'email' => $pedido->cliente->email,
                 'paymentNumber' => $companyTransactionId,
                 'amount' => (float) $saldo_pendiente,
                 'currency' => 2, // BOB
                 'clientCode' => (string) $pedido->cliente_id,
-                'callbackUrl' => route('payments.callback'),
+                // ✅ URL de producción (sin HTTPS por excepción del profesor)
+                'callbackUrl' => 'https://www.tecnoweb.org.bo/inf513/grupo07sa/payments/callback',
+                
                 'orderDetail' => [
                     [
                         'serial' => 1,
@@ -114,11 +132,19 @@ class PaymentController extends Controller
                 ]
             ];
 
+            \Log::info('📋 Datos preparados para PagoFácil', [
+                'qr_data' => $qrData,
+                'callback_url' => $qrData['callbackUrl']
+            ]);
+
+
             // Generar QR a través del servicio
+            \Log::info('🌐 Llamando a PagoFacilService...');
             $response = $this->pagoFacilService->generateQr($qrData);
+            \Log::info('✅ Respuesta de PagoFácil recibida', ['response' => $response]);
 
             // Guardar el pago pendiente con el QR
-            Payment::create([
+            $payment = Payment::create([
                 'pedido_id' => $pedido->pedido_id,
                 'monto' => $saldo_pendiente,
                 'metodo_pago' => 'QR',
@@ -131,10 +157,25 @@ class PaymentController extends Controller
                 'qr_expiration' => $response['expirationDate'],
             ]);
 
-            return redirect()->back()->with('success', 'QR generado exitosamente.')->with('qr_data', $response);
+            \Log::info('💾 Pago guardado en BD', ['pago_id' => $payment->pago_id]);
+
+            // ✅ Retornar con Inertia para que el QR se muestre
+            return redirect()->route('payments.index')->with([
+                'success' => 'QR generado exitosamente.',
+                'qr_data' => [
+                    'qrBase64' => $response['qrBase64'],
+                    'transactionId' => $response['transactionId'],
+                    'expirationDate' => $response['expirationDate'],
+                ]
+            ]);
+
 
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Error al generar QR: ' . $e->getMessage()]);
+            \Log::error('❌ Error al generar QR2', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->withErrors(['error' => 'Error al generar QR 1: ' . $e->getMessage()]);
         }
     }
 
@@ -143,6 +184,8 @@ class PaymentController extends Controller
      */
     public function callback(Request $request)
     {
+        \Log::info('📞 Callback recibido de PagoFácil', $request->all());
+
         // Validar la notificación
         $pedidoId = $request->input('PedidoID'); // Company Transaction ID
         $estado = $request->input('Estado');
@@ -151,17 +194,31 @@ class PaymentController extends Controller
         $payment = Payment::where('company_transaction_id', $pedidoId)->first();
 
         if (!$payment) {
+            \Log::warning('⚠️ Pago no encontrado', ['company_transaction_id' => $pedidoId]);
             return response()->json(['error' => 1, 'message' => 'Pago no encontrado'], 404);
         }
 
         // Actualizar el estado del pago si fue exitoso
-        if ($estado === 'Completado' || $estado === 'PAID') {
+        if ($estado === 'Completado' || $estado === 'PAID' || $estado === 2) {  // 2 = PAID según API
             $payment->update([
                 'qr_status' => 'PAID',
                 'fecha_pago' => now(),
             ]);
 
-            // Aquí podrías agregar lógica adicional, como enviar un email al cliente
+            // ✅ ACTUALIZAR ESTADO DEL PEDIDO
+            if ($payment->pedido) {
+                // Calcular si el pedido está totalmente pagado
+                $totalPagado = $payment->pedido->pagos()->sum('monto');
+                $totalAPagar = $payment->pedido->presupuesto_total - $payment->pedido->monto_descuento;
+
+                if ($totalPagado >= $totalAPagar) {
+                    // Pedido completamente pagado → cambiar a EN_PROCESO
+                    $payment->pedido->update(['estado_pedido' => 'EN_PROCESO']);
+                    \Log::info('✅ Pedido actualizado a EN_PROCESO', ['pedido_id' => $payment->pedido_id]);
+                }
+            }
+
+            \Log::info('✅ Pago confirmado', ['pago_id' => $payment->pago_id]);
         }
 
         // Responder conforme a la API de PagoFácil
@@ -171,6 +228,95 @@ class PaymentController extends Controller
             'message' => 'Notificación recibida correctamente',
             'values' => true
         ], 200);
+    }
+
+    /**
+     * Consultar estado de transacción (MANUAL)
+     */
+    public function checkTransactionStatus($paymentId)
+    {
+        $payment = Payment::findOrFail($paymentId);
+
+        if (!$payment->pagofacil_transaction_id) {
+            return response()->json(['error' => 'Este pago no tiene un ID de transacción de PagoFácil'], 400);
+        }
+
+        try {
+            \Log::info('🔍 Consultando estado de transacción', [
+                'payment_id' => $paymentId,
+                'transaction_id' => $payment->pagofacil_transaction_id
+            ]);
+
+            // Consultar estado en PagoFácil
+            $result = $this->pagoFacilService->consultarTransaccion($payment->pagofacil_transaction_id);
+
+            \Log::info('📊 Resultado de consulta', $result);
+
+            // Actualizar estado según respuesta
+            if (isset($result['paymentStatus'])) {
+                $status = $result['paymentStatus'];
+                
+                if ($status == 2) {  // PAID
+                    $payment->update(['qr_status' => 'PAID']);
+
+                    // Actualizar pedido si está completamente pagado
+                    if ($payment->pedido) {
+                        $totalPagado = $payment->pedido->pagos()->sum('monto');
+                        $totalAPagar = $payment->pedido->presupuesto_total - $payment->pedido->monto_descuento;
+
+                        if ($totalPagado >= $totalAPagar) {
+                            $payment->pedido->update(['estado_pedido' => 'EN_PROCESO']);
+                        }
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'PAID',
+                        'message' => '✅ Pago confirmado exitosamente',
+                        'data' => $result
+                    ]);
+                } elseif ($status == 1) {  // PENDING
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'PENDING',
+                        'message' => '⏳ Pago pendiente de confirmación',
+                        'data' => $result
+                    ]);
+                } elseif ($status == 3) {  // CANCELLED
+                    $payment->update(['qr_status' => 'CANCELLED']);
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'CANCELLED',
+                        'message' => '❌ Pago cancelado',
+                        'data' => $result
+                    ]);
+                } elseif ($status == 4) {  // EXPIRED
+                    $payment->update(['qr_status' => 'EXPIRED']);
+                    return response()->json([
+                        'success' => true,
+                        'status' => 'EXPIRED',
+                        'message' => '⏰ QR expirado',
+                        'data' => $result
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado consultado',
+                'data' => $result
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('❌ Error al consultar estado', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al consultar estado: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

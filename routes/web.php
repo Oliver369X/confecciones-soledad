@@ -16,9 +16,9 @@ Route::get('/hacer-pedido', [PublicController::class,'hacerPedido'])->name('publ
 Route::post('/hacer-pedido', [PublicController::class, 'guardarPedido'])->name('public.guardar-pedido');
 Route::get('/gracias', [PublicController::class, 'gracias'])->name('public.gracias');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     // Use Case 7: Payments Management
     Route::resource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store', 'destroy']);
     Route::post('payments/generate-qr', [\App\Http\Controllers\PaymentController::class, 'generateQr'])->name('payments.generate-qr');
+    Route::get('payments/{payment}/check-status', [\App\Http\Controllers\PaymentController::class, 'checkTransactionStatus'])->name('payments.check-status');
 
     // Use Case 8: Reports & Statistics
     Route::get('reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');

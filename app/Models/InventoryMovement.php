@@ -15,18 +15,20 @@ class InventoryMovement extends Model
     protected $fillable = [
         'item_id',
         'pedido_id',
-        'tipo',
+        'tipo_movimiento',  // Changed from 'tipo'
         'cantidad',
         'costo_unitario_ingreso',
-        'fecha',
+        'fecha_movimiento',  // Changed from 'fecha'
+        'motivo',  // Added
         'usuario_id',
     ];
 
     protected $casts = [
         'cantidad' => 'decimal:2',
         'costo_unitario_ingreso' => 'decimal:2',
-        'fecha' => 'datetime',
+        'fecha_movimiento' => 'datetime',  // Changed from 'fecha'
     ];
+
 
     public function item()
     {

@@ -30,25 +30,54 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'nombre_completo' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'telefono' => 'nullable|string|max:20',
+        \Log::info('🔵 [REGISTRO] Iniciando proceso de registro', [
+            'datos_recibidos' => $request->except('password', 'password_confirmation')
         ]);
 
-        $user = User::create([
-            'nombre_completo' => $request->nombre_completo,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'rol' => 'CLIENTE', // Siempre CLIENTE en registro público
-            'telefono' => $request->telefono,
-        ]);
+        try {
+            $validated = $request->validate([
+                'nombre_completo' => 'required|string|max:255',
+                'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+                'telefono' => 'nullable|string|max:20',
+            ]);
 
-        event(new Registered($user));
+            \Log::info('✅ [REGISTRO] Validación exitosa');
 
-        Auth::login($user);
+            $user = User::create([
+                'nombre_completo' => $request->nombre_completo,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'rol' => 'CLIENTE', // Siempre CLIENTE en registro público
+                'telefono' => $request->telefono,
+            ]);
 
-        return redirect(route('cliente.mi-cuenta', absolute: false));
+            \Log::info('✅ [REGISTRO] Usuario creado exitosamente', [
+                'usuario_id' => $user->usuario_id,
+                'email' => $user->email,
+                'rol' => $user->rol,
+            ]);
+
+            event(new Registered($user));
+
+            Auth::login($user);
+
+            \Log::info('✅ [REGISTRO] Usuario autenticado. Redirigiendo a Mi Cuenta');
+
+            return redirect(route('cliente.mi-cuenta', absolute: false));
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('❌ [REGISTRO] Error de validación', [
+                'errores' => $e->errors()
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('❌ [REGISTRO] Error grave en el registro', [
+                'mensaje' => $e->getMessage(),
+                'linea' => $e->getLine(),
+                'archivo' => $e->getFile()
+            ]);
+            throw $e;
+        }
     }
 }

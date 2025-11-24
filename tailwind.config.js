@@ -13,7 +13,19 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['var(--font-family)', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                primary: 'var(--color-primary)',
+                secondary: 'var(--color-secondary)',
+                accent: 'var(--color-accent)',
+                'theme-bg': 'var(--mode-bg-primary)',
+                'theme-text': 'var(--mode-text-primary)',
+                'theme-card': 'var(--mode-bg-secondary)',
+                'theme-border': 'var(--mode-border)',
+            },
+            borderRadius: {
+                DEFAULT: 'var(--radius)',
             },
         },
     },

@@ -44,6 +44,12 @@
                                   class="ml-4 bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition">
                                 Ver Detalle →
                             </Link>
+                            
+                            <button v-if="pedido.estado === 'ENTREGADO'" 
+                                    @click="openReviewModal(pedido)"
+                                    class="ml-2 bg-yellow-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition">
+                                ★ Calificar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -75,16 +81,95 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal de Reseña -->
+        <Modal :show="showReviewModal" @close="closeReviewModal">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    Calificar Pedido #{{ selectedPedido?.pedido_id }}
+                </h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Cuéntanos tu experiencia con este servicio.
+                </p>
+
+                <div class="mt-6">
+                    <div>
+                        <InputLabel for="calificacion" value="Calificación (1-5 Estrellas)" />
+                        <div class="flex gap-2 mt-2">
+                            <button v-for="star in 5" :key="star" type="button" 
+                                    @click="reviewForm.calificacion = star"
+                                    class="text-2xl focus:outline-none transition transform hover:scale-110"
+                                    :class="star <= reviewForm.calificacion ? 'text-yellow-400' : 'text-gray-300'">
+                                ★
+                            </button>
+                        </div>
+                        <InputError :message="reviewForm.errors.calificacion" class="mt-2" />
+                    </div>
+
+                    <div class="mt-4">
+                        <InputLabel for="comentario" value="Comentario (Opcional)" />
+                        <textarea id="comentario" v-model="reviewForm.comentario" 
+                                  class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                  rows="3"
+                                  placeholder="¿Qué te pareció el servicio?"></textarea>
+                        <InputError :message="reviewForm.errors.comentario" class="mt-2" />
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <SecondaryButton @click="closeReviewModal">Cancelar</SecondaryButton>
+                    <PrimaryButton class="ms-3" :class="{ 'opacity-25': reviewForm.processing }" :disabled="reviewForm.processing" @click="submitReview">
+                        Enviar Reseña
+                    </PrimaryButton>
+                </div>
+            </div>
+        </Modal>
     </AuthenticatedLayout>
 </template>
 
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Link } from '@inertiajs/vue3';
+import Modal from '@/Components/Modal.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import TextInput from '@/Components/TextInput.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import InputError from '@/Components/InputError.vue';
+import { Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 defineProps({
     pedidos: Object,
 });
+
+const showReviewModal = ref(false);
+const selectedPedido = ref(null);
+
+const reviewForm = useForm({
+    pedido_id: null,
+    calificacion: 5,
+    comentario: '',
+});
+
+const openReviewModal = (pedido) => {
+    selectedPedido.value = pedido;
+    reviewForm.pedido_id = pedido.pedido_id;
+    reviewForm.calificacion = 5;
+    reviewForm.comentario = '';
+    showReviewModal.value = true;
+};
+
+const closeReviewModal = () => {
+    showReviewModal.value = false;
+    reviewForm.reset();
+    selectedPedido.value = null;
+};
+
+const submitReview = () => {
+    reviewForm.post(route('reviews.store'), {
+        onSuccess: () => closeReviewModal(),
+    });
+};
 
 const getEstadoClass = (estado) => {
     const classes = {

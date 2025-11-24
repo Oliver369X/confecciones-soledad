@@ -1,6 +1,6 @@
+/* Sistema de Temas */
+@import './themes.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Sistema de Temas */
-@import './themes.css';

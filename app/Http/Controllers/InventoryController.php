@@ -26,15 +26,21 @@ class InventoryController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre_material' => 'required|string|max:255',
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'cantidad_stock' => 'required|numeric|min:0',
             'unidad_medida' => 'required|string|max:50',
             'costo_unitario' => 'required|numeric|min:0',
         ]);
 
-        $item = InventoryItem::create($request->all());
+        // Mapeo manual de campos porque los nombres en el formulario difieren de la BD
+        $item = InventoryItem::create([
+            'nombre' => $request->nombre,
+            'stock_actual' => $request->cantidad_stock, // Mapeo correcto
+            'unidad_medida' => $request->unidad_medida,
+            'costo_promedio_ponderado' => $request->costo_unitario, // Mapeo correcto
+        ]);
 
         // Registrar movimiento inicial si hay stock
         if ($request->cantidad_stock > 0) {
@@ -51,22 +57,24 @@ class InventoryController extends Controller
         return redirect()->route('inventory.index')->with('success', 'Material registrado exitosamente.');
     }
 
+
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, InventoryItem $inventory)
     {
-        $request->validate([
-            'nombre_material' => 'required|string|max:255',
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
             'unidad_medida' => 'required|string|max:50',
             'costo_unitario' => 'required|numeric|min:0',
         ]);
 
-        $inventory->update($request->all());
+        $inventory->update($validated);
 
         return redirect()->route('inventory.index')->with('success', 'Material actualizado.');
     }
+
 
     /**
      * Remove the specified resource from storage.
