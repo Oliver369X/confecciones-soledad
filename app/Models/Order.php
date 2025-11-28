@@ -25,6 +25,10 @@ class Order extends Model
         'costo_materiales_total',
         'promocion_id',
         'monto_descuento',
+        'numero_cuotas',
+        'cuotas_pagadas',
+        'saldo_pendiente',
+        'codigo_promocion',
     ];
 
     protected $casts = [

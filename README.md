@@ -34,17 +34,24 @@
 ### 👤 **Panel de Cliente**
 - Dashboard con estadísticas personales
 - Visualización de pedidos propios
+- **Sistema de Reseñas** - Calificar pedidos entregados (1-5 estrellas)
 - Historial detallado
 
 ### 🛠️ **Panel Administrativo Completo**
 1. **Gestión de Usuarios** - 3 roles (Propietario, Ayudante, Cliente)
 2. **Gestión de Portafolio** - Trabajos con imágenes antes/después
 3. **Gestión de Pedidos** - Estados, presupuestos, fechas
-4. **Gestión de Inventario** - Stock y movimientos
+4. **Gestión de Inventario** - Stock, movimientos, alertas de stock bajo
 5. **Gestión de Promociones** - Descuentos porcentuales y fijos
-6. **Gestión de Reseñas** - Calificaciones de clientes
-7. **Pagos Electrónicos** - **Integración PagoFácil QR**
-8. **Reportes y Estadísticas** - Ingresos, costos, rentabilidad
+6. **Gestión de Reseñas** - Calificaciones de clientes (solo visualización)
+7. **Pagos Electrónicos** - **Integración PagoFácil QR con Callback**
+8. **Reportes y Estadísticas** - Ingresos, costos, rentabilidad (exportables a PDF)
+
+### 📊 **Dashboard Inteligente**
+- **Pedidos de Hoy** - Contador en tiempo real
+- **Trabajos en Proceso** - Estados PENDIENTE y EN_PROCESO
+- **Ingresos del Mes** - Suma de pagos confirmados
+- **Alertas de Stock Bajo** - Items con stock ≤ 5
 
 ### 🎨 **Sistema de Temas**
 - **3 Temas**: Niños, Jóvenes, Adultos
@@ -154,9 +161,41 @@ PAGOFACIL_TOKEN_SECRET=tu_token_secreto
 PAGOFACIL_URL=https://serviciostigomoney.pagofacil.com.bo/api
 ```
 
-### Usuarios por Defecto
+**Callback URL para Producción:**
+El sistema está configurado para recibir notificaciones en:
+```
+https://tu-dominio.com/payments/callback
+```
 
-Después de ejecutar seeders:
+Esta ruta ya está **excluida de la protección CSRF** en `bootstrap/app.php` para permitir que PagoFácil envíe notificaciones POST sin token.
+
+### Crear Usuario Administrador
+
+Si necesitas crear un usuario propietario manualmente:
+
+```bash
+php artisan tinker
+```
+
+Luego ejecuta:
+```php
+\App\Models\User::create([
+    'nombre_completo' => 'Propietario',
+    'email' => 'admin@confecciones.com',
+    'password' => Hash::make('tu_contraseña_segura'),
+    'rol' => 'PROPIETARIO',
+    'telefono' => '75123456',
+]);
+```
+
+O usa el comando personalizado (si existe):
+```bash
+php artisan make:admin
+```
+
+### Usuarios por Defecto (Seeders)
+
+Si ejecutaste los seeders:
 - **Email**: propietaria@confecciones.com
 - **Password**: password
 

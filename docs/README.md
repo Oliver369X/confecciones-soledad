@@ -201,7 +201,8 @@ SALIDA:
 CRUD de usuarios (solo PROPIETARIO)
 
 ### OrderController
-CRUD de pedidos (PROPIETARIO + AYUDANTE)
+CRUD de pedidos (PROPIETARIO + AYUDANTE).
+- Permite a Propietarios y Ayudantes actualizar el estado del pedido manualmente desde la vista de detalles.
 
 ### PaymentController
 **Destacado:**

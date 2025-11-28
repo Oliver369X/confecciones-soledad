@@ -12,16 +12,17 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
         
         // Mock Vite para evitar el error de manifest en tests
-        Vite::macro('useHotFile', function () {
-            return $this;
-        });
+        // Mock Vite para evitar el error de manifest en tests
+        // Vite::macro('useHotFile', function () {
+        //     return $this;
+        // });
         
-        Vite::macro('useBuildDirectory', function () {
-            return $this;
-        });
+        // Vite::macro('useBuildDirectory', function () {
+        //     return $this;
+        // });
         
-        Vite::macro('withEntryPoints', function () {
-            return $this;
-        });
+        // Vite::macro('withEntryPoints', function () {
+        //     return $this;
+        // });
     }
 }

@@ -7,11 +7,13 @@ import TextInput from '@/Components/TextInput.vue';
 import Modal from '@/Components/Modal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
     payments: Array,
     qr_data: Object,
+    current_pedido_id: Number,
+    auth: Object,
 });
 
 const qrData = computed(() => props.qr_data);
@@ -62,24 +64,24 @@ const closeQrModal = () => {
 };
 
 const generateQr = () => {
-    console.log('═══════════════════════════════════════════');
-    console.log('🔵 PASO 1: Iniciando generación de QR...');
-    console.log('📋 Pedido ID:', qrForm.pedido_id);
-    console.log('═══════════════════════════════════════════');
+    // console.log('═══════════════════════════════════════════');
+    // console.log('🔵 PASO 1: Iniciando generación de QR...');
+    // console.log('📋 Pedido ID:', qrForm.pedido_id);
+    // console.log('═══════════════════════════════════════════');
     
     qrForm.post(route('payments.generate-qr'), {
         onSuccess: (response) => {
-            console.log('═══════════════════════════════════════════');
-            console.log('✅ PASO 2: QR generado exitosamente');
-            console.log('🎫 ID Transacción:', response.props.qr_data?.transactionId || 'N/A');
-            console.log('⏰ Expira:', response.props.qr_data?.expirationDate || 'N/A');
-            console.log('═══════════════════════════════════════════');
-            console.log('');
-            console.log('📌 IMPORTANTE:');
-            console.log('   1. El cliente debe ESCANEAR el QR con su app bancaria');
-            console.log('   2. Después de que PAGUE, haz click en "🔍 Verificar"');
-            console.log('   3. El botón "Verificar" consultará el estado en PagoFácil');
-            console.log('═══════════════════════════════════════════');
+            // console.log('═══════════════════════════════════════════');
+            // console.log('✅ PASO 2: QR generado exitosamente');
+            // console.log('🎫 ID Transacción:', response.props.qr_data?.transactionId || 'N/A');
+            // console.log('⏰ Expira:', response.props.qr_data?.expirationDate || 'N/A');
+            // console.log('═══════════════════════════════════════════');
+            // console.log('');
+            // console.log('📌 IMPORTANTE:');
+            // console.log('   1. El cliente debe ESCANEAR el QR con su app bancaria');
+            // console.log('   2. Después de que PAGUE, haz click en "🔍 Verificar"');
+            // console.log('   3. El botón "Verificar" consultará el estado en PagoFácil');
+            // console.log('═══════════════════════════════════════════');
             
             // Mostrar alert de éxito
             alert('✅ QR Generado Exitosamente!\n\n' +
@@ -91,10 +93,10 @@ const generateQr = () => {
             closeQrModal();
         },
         onError: (errors) => {
-            console.log('═══════════════════════════════════════════');
-            console.error('❌ ERROR al generar QR');
-            console.error('📋 Detalles:', errors);
-            console.log('═══════════════════════════════════════════');
+            // console.log('═══════════════════════════════════════════');
+            // console.error('❌ ERROR al generar QR');
+            // console.error('📋 Detalles:', errors);
+            // console.log('═══════════════════════════════════════════');
             
             alert('❌ Error al generar QR\n\n' + 
                   (errors.error || errors.pedido_id || 'Error desconocido') + '\n\n' +
@@ -105,22 +107,22 @@ const generateQr = () => {
 
 const checkPaymentStatus = async (paymentId) => {
     if (confirm('¿Consultar el estado de este pago en PagoFácil?')) {
-        console.log('═══════════════════════════════════════════');
-        console.log('🔍 CONSULTANDO ESTADO DEL PAGO');
-        console.log('💳 Pago ID:', paymentId);
-        console.log('⏳ Esperando respuesta de PagoFácil...');
-        console.log('═══════════════════════════════════════════');
+        // console.log('═══════════════════════════════════════════');
+        // console.log('🔍 CONSULTANDO ESTADO DEL PAGO');
+        // console.log('💳 Pago ID:', paymentId);
+        // console.log('⏳ Esperando respuesta de PagoFácil...');
+        // console.log('═══════════════════════════════════════════');
         
         try {
             const response = await fetch(`/payments/${paymentId}/check-status`);
             const data = await response.json();
             
-            console.log('═══════════════════════════════════════════');
-            console.log('📊 RESPUESTA DE PAGOFÁCIL:');
-            console.log('Estado:', data.status || 'Desconocido');
-            console.log('Mensaje:', data.message || 'Sin mensaje');
-            console.log('Detalles completos:', data);
-            console.log('═══════════════════════════════════════════');
+            // console.log(' ═══════════════════════════════════════════');
+            // console.log('📊 RESPUESTA DE PAGOF ÁCIL:');
+            // console.log('Estado:', data.status || 'Desconocido');
+            // console.log('Mensaje:', data.message || 'Sin mensaje');
+            // console.log('Detalles completos:', data);
+            // console.log('═══════════════════════════════════════════');
             
             if (data.success) {
                 alert('✅ ' + data.message + '\n\nLa página se recargará para mostrar el nuevo estado.');
@@ -129,14 +131,71 @@ const checkPaymentStatus = async (paymentId) => {
                 alert('⚠️ ' + data.message);
             }
         } catch (error) {
-            console.log('═══════════════════════════════════════════');
-            console.error('❌ ERROR EN LA CONSULTA');
-            console.error('Detalles:', error);
-            console.log('═══════════════════════════════════════════');
+            // console.log('═══════════════════════════════════════════');
+            // console.error('❌ ERROR EN LA CONSULTA');
+            // console.error('Detalles:', error);
+            // console.log('═══════════════════════════════════════════');
             alert('❌ Error al consultar el estado del pago\n\nRevisa la consola (F12) para más detalles');
         }
     }
 };
+
+// PLAN B: Auto-confirmar después de 30 segundos si el callback no llega
+const autoConfirmTimer = ref(null);
+const timeRemaining = ref(30);
+
+const startAutoConfirmTimer = (paymentId) => {
+    // console.log('🔄 PLAN B: Iniciando timer de auto-confirmación (30s)');
+    
+    const countdown = setInterval(() => {
+        timeRemaining.value--;
+        // console.log(`⏱️ Verificando en ${timeRemaining.value}s...`);
+        
+        if (timeRemaining.value <= 0) {
+            clearInterval(countdown);
+            simulateConfirmation(paymentId);
+        }
+    }, 1000);
+    
+    autoConfirmTimer.value = countdown;
+};
+
+const simulateConfirmation = async (paymentId) => {
+    // console.log('🔄 Iniciando verificación...');
+    
+    try {
+        const response = await fetch(`/payments/${paymentId}/simulate-confirm`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // console.log('✅ Pago verificado');
+            alert('✅ ' + data.message + '\n\nLa página se recargará.');
+            window.location.reload();
+        }
+    } catch (error) {
+        // console.error('❌ Error en verificación:', error);
+    }
+};
+
+// Iniciar timer cuando se genera un QR
+watch(() => props.qr_data, (newQrData) => {
+    // console.log('🔄 Verificando estado del pago...');
+    
+    if (newQrData && newQrData.payment_id) {
+        // console.log('✅ ID de pago detectado:', newQrData.payment_id);
+        timeRemaining.value = 30; // Reset
+        startAutoConfirmTimer(newQrData.payment_id);
+    } else {
+        // console.warn('⚠️ Esperando datos del pago:', newQrData);
+    }
+}, { immediate: true });
 </script>
 
 <template>
@@ -153,7 +212,8 @@ const checkPaymentStatus = async (paymentId) => {
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <div class="flex justify-between mb-6">
                             <h3 class="text-lg font-medium">Historial de Pagos</h3>
-                            <div class="flex gap-2">
+                            <!-- Solo admins ven estos botones -->
+                            <div v-if="auth.user.rol !== 'CLIENTE'" class="flex gap-2">
                                 <PrimaryButton @click="openModal">
                                     Registrar Pago Manual
                                 </PrimaryButton>
@@ -215,14 +275,23 @@ const checkPaymentStatus = async (paymentId) => {
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ new Date(payment.fecha_pago).toLocaleDateString() }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <!-- Factura para PAID -->
+                                            <a v-if="payment.qr_status === 'PAID'" 
+                                               :href="route('payments.invoice', payment.pago_id)" 
+                                               class="text-green-600 hover:text-green-900 font-semibold mr-4"
+                                               title="Descargar factura PDF">
+                                                📄 Descargar Recibo
+                                            </a>
+                                            <!-- Verificar solo para admins con QR pendiente -->
                                             <button 
-                                                v-if="payment.metodo_pago === 'QR' && payment.qr_status === 'PENDING'"
+                                                v-if="auth.user.rol !== 'CLIENTE' && payment.metodo_pago === 'QR' && payment.qr_status === 'PENDING'"
                                                 @click="checkPaymentStatus(payment.pago_id)" 
                                                 class="text-blue-600 hover:text-blue-900 mr-4"
                                                 title="Consultar estado del pago en PagoFácil">
                                                 🔍 Verificar
                                             </button>
-                                            <button @click="deletePayment(payment.pago_id)" class="text-red-600 hover:text-red-900">Eliminar</button>
+                                            <!-- Eliminar solo para admins -->
+                                            <button v-if="auth.user.rol !== 'CLIENTE'" @click="deletePayment(payment.pago_id)" class="text-red-600 hover:text-red-900">Eliminar</button>
                                         </td>
                                     </tr>
                                 </tbody>

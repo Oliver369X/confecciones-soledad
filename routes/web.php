@@ -7,6 +7,9 @@ use Inertia\Inertia;
 
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\InvoiceController;
 
 // Rutas Públicas (sin autenticación)
 Route::get('/', [PublicController::class, 'home'])->name('public.home');
@@ -32,10 +35,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('portfolio', \App\Http\Controllers\PortfolioController::class);
 
     // Use Case 3: Order Management
-    Route::resource('orders', \App\Http\Controllers\OrderController::class);
+    Route::resource('orders', OrderController::class);
+    Route::post('/orders/{order}/discount', [OrderController::class, 'applyDiscount'])->name('orders.apply-discount');
 
     // Use Case 4: Inventory Management
-    Route::resource('inventory', \App\Http\Controllers\InventoryController::class);
+    Route::resource('inventory', InventoryController::class);
     Route::post('inventory/{inventory}/movement', [\App\Http\Controllers\InventoryController::class, 'storeMovement'])->name('inventory.movement.store');
 
     // Use Case 5: Promotions Management
@@ -48,12 +52,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store', 'destroy']);
     Route::post('payments/generate-qr', [\App\Http\Controllers\PaymentController::class, 'generateQr'])->name('payments.generate-qr');
     Route::get('payments/{payment}/check-status', [\App\Http\Controllers\PaymentController::class, 'checkTransactionStatus'])->name('payments.check-status');
+    Route::post('payments/{payment}/simulate-confirm', [\App\Http\Controllers\PaymentController::class, 'simulateConfirmation'])->name('payments.simulate-confirm');
+    Route::get('/payments/{payment}/invoice', [InvoiceController::class, 'download'])->name('payments.invoice');
 
     // Use Case 8: Reports & Statistics
     Route::get('reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
 });
 
-// Rutas específicas para CLIENTES (fuera del middleware anterior)
+// Rutas específicas para CLIENTES autenticados
 Route::middleware('auth')->group(function () {
     Route::get('/mi-cuenta', [ClienteController::class, 'miCuenta'])->name('cliente.mi-cuenta');
     Route::get('/mis-pedidos', [ClienteController::class, 'misPedidos'])->name('cliente.mis-pedidos');

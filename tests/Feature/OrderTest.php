@@ -26,6 +26,7 @@ class OrderTest extends TestCase
         $propietario = User::factory()->propietario()->create();
         $cliente = User::factory()->cliente()->create();
 
+
         $response = $this->actingAs($propietario)->post('/orders', [
             'cliente_id' => $cliente->usuario_id,
             'tipo_servicio' => 'ARREGLO',

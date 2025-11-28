@@ -28,7 +28,7 @@ class ClienteController extends Controller
     public function misPedidos()
     {
         $pedidos = Order::where('cliente_id', auth()->id())
-            ->with(['promotion', 'payments'])
+            ->with(['promocion', 'pagos'])
             ->latest()
             ->paginate(10);
 
@@ -41,11 +41,21 @@ class ClienteController extends Controller
     {
         $pedido = Order::where('cliente_id', auth()->id())
             ->where('pedido_id', $id)
-            ->with(['promotion', 'payments'])
+            ->with(['promocion', 'pagos'])
             ->firstOrFail();
 
         return Inertia::render('Cliente/VerPedido', [
             'pedido' => $pedido,
         ]);
+    }
+    public function catalogo()
+    {
+        $portfolio = \App\Models\PortfolioItem::where('publicado', true)->latest()->paginate(12);
+        return Inertia::render('Cliente/Catalogo', ['portfolio' => $portfolio]);
+    }
+
+    public function hacerPedido()
+    {
+        return Inertia::render('Cliente/HacerPedido');
     }
 }

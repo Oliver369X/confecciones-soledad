@@ -13,7 +13,7 @@
                         <div class="flex items-start justify-between">
                             <div class="flex-1">
                                 <div class="flex items-center space-x-3 mb-3">
-                                    <span class="text-gray-500 font-mono">#{pedido.pedido_id}</span>
+                                    <span class="text-gray-500 font-mono">#{{ pedido.pedido_id }}</span>
                                     <span :class="getEstadoClass(pedido.estado)" class="px-3 py-1 rounded-full text-sm font-semibold">
                                         {{ getEstadoLabel(pedido.estado) }}
                                     </span>

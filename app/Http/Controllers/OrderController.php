@@ -110,18 +110,62 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $request->validate([
-            'estado' => 'required|string',
+            'estado' => 'nullable|string',
             'ayudante_id' => 'nullable|exists:users,usuario_id',
             'fecha_entrega_estimada' => 'nullable|date',
+            'presupuesto_total' => 'nullable|numeric|min:0',
+            'numero_cuotas' => 'nullable|integer|min:1|max:12',
         ]);
 
-        $order->update($request->only(['estado', 'ayudante_id', 'fecha_entrega_estimada']));
+        $data = $request->only(['estado', 'ayudante_id', 'fecha_entrega_estimada', 'presupuesto_total', 'numero_cuotas']);
+
+        // Si se define presupuesto y saldo es 0 (nuevo presupuesto), actualizar saldo
+        if (isset($data['presupuesto_total']) && $order->saldo_pendiente == 0 && $order->pagos()->count() == 0) {
+             $order->saldo_pendiente = $data['presupuesto_total'];
+             $order->save();
+        }
+        
+        // Si se cambia el número de cuotas, solo actualizar
+        
+        $order->update($data);
 
         if ($request->estado === 'ENTREGADO' && !$order->fecha_entregado) {
             $order->update(['fecha_entregado' => now()]);
         }
 
         return redirect()->back()->with('success', 'Pedido actualizado.');
+    }
+
+    public function applyDiscount(Request $request, Order $order)
+    {
+        $request->validate(['codigo' => 'required|string']);
+        
+        $promo = Promotion::where('codigo', $request->codigo)
+            ->where('activa', true)
+            ->whereDate('fecha_inicio', '<=', now())
+            ->whereDate('fecha_fin', '>=', now())
+            ->first();
+        
+        if (!$promo) {
+            return back()->withErrors(['codigo' => 'Código inválido o expirado.']);
+        }
+        
+        $monto_descuento = 0;
+        if ($promo->tipo_descuento === 'PORCENTAJE') {
+            $monto_descuento = $order->presupuesto_total * ($promo->valor_descuento / 100);
+        } else {
+            $monto_descuento = $promo->valor_descuento;
+        }
+        
+        $order->update([
+            'promocion_id' => $promo->promocion_id,
+            'monto_descuento' => $monto_descuento,
+            'codigo_promocion' => $promo->codigo,
+            // Actualizar saldo pendiente
+            'saldo_pendiente' => max(0, $order->presupuesto_total - $monto_descuento - $order->pagos()->sum('monto'))
+        ]);
+        
+        return back()->with('success', 'Descuento aplicado correctamente.');
     }
 
     /**

@@ -8,7 +8,7 @@
     --transition: all 0.3s ease;
 }
 
-/* ==================== TEMA NIÑOS ==================== */
+/* ==================== TEMA NIÑOS (Divertido y Pop) ==================== */
 [data-theme="ninos"] {
     --color-primary: #FF6B9D;
     --color-secondary: #FEC163;
@@ -17,31 +17,57 @@
     --color-text: #2D3748;
     --color-card: #FFFFFF;
     --font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
-    --radius: 20px;
+    --radius: 25px;
+    --border-width: 3px;
+    --shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+
+    /* Fondo con patrón de lunares */
+    background-image: radial-gradient(#FF6B9D 15%, transparent 16%), radial-gradient(#FEC163 15%, transparent 16%);
+    background-size: 60px 60px;
+    background-position: 0 0, 30px 30px;
 }
 
-/* ==================== TEMA JÓVENES ==================== */
+/* ==================== TEMA JÓVENES (Cyberpunk / Glassmorphism) ==================== */
 [data-theme="jovenes"] {
-    --color-primary: #6366F1; /* Indigo moderno */
-    --color-secondary: #8B5CF6; /* Purple */
-    --color-accent: #EC4899; /* Pink vibrante */
-    --color-bg: #F9FAFB;
-    --color-text: #111827;
-    --color-card: #FFFFFF;
+    --color-primary: #6366F1;
+    /* Indigo moderno */
+    --color-secondary: #8B5CF6;
+    /* Purple */
+    --color-accent: #EC4899;
+    /* Pink vibrante */
+    --color-bg: #0f172a;
+    /* Dark Blue Background */
+    --color-text: #f3f4f6;
+    --color-card: rgba(30, 41, 59, 0.7);
+    /* Semi-transparent */
     --font-family: 'Inter', -apple-system, sans-serif;
-    --radius: 12px;
+    --radius: 16px;
+    --border-width: 1px;
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+
+    /* Fondo con gradiente oscuro */
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
 }
 
-/* ==================== TEMA ADULTOS ==================== */
+/* ==================== TEMA ADULTOS (Minimalista / Corporativo) ==================== */
 [data-theme="adultos"] {
-    --color-primary: #1E3A8A; /* Blue profesional */
-    --color-secondary: #047857; /* Green elegante */
-    --color-accent: #92400E; /* Amber oscuro */
+    --color-primary: #1E3A8A;
+    /* Blue profesional */
+    --color-secondary: #047857;
+    /* Green elegante */
+    --color-accent: #92400E;
+    /* Amber oscuro */
     --color-bg: #F3F4F6;
     --color-text: #1F2937;
     --color-card: #FFFFFF;
     --font-family: 'Georgia', 'Times New Roman', serif;
     --radius: 4px;
+    --border-width: 1px;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    /* Fondo plano y limpio */
+    background-color: #F3F4F6;
+    background-image: none;
 }
 
 /* ==================== MODO DÍA ==================== */
@@ -62,49 +88,61 @@
     --mode-border: #374151;
 }
 
-/* ==================== ACCESIBILIDAD - TAMAÑO DE TEXTO ==================== */
-[data-text-size="normal"] {
-    font-size: 16px;
-}
-
-[data-text-size="grande"] {
-    font-size: 18px;
-}
-
-[data-text-size="muy-grande"] {
-    font-size: 20px;
-}
-
-/* ==================== ACCESIBILIDAD - ALTO CONTRASTE ==================== */
-[data-high-contrast="true"] {
-    filter: contrast(1.5) !important;
-}
-
-[data-high-contrast="true"] * {
-    border-color: currentColor !important;
-}
-
-/* ==================== APLICACIÓN DE TEMAS ==================== */
+/* ==================== APLICACIÓN DE ESTILOS ==================== */
 body {
     font-family: var(--font-family, 'Inter', sans-serif);
-    background-color: var(--mode-bg-primary, var(--color-bg,  #FFFFFF));
-    color: var(--mode-text-primary, var(--color-text, #1F2937));
+    background-color: var(--color-bg);
+    /* Usar color del tema */
+    color: var(--color-text);
     transition: var(--transition);
+    min-height: 100vh;
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+/* Override para Jovenes (Glassmorphism) */
+[data-theme="jovenes"] .bg-theme-card {
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Override para Niños (Pop) */
+[data-theme="ninos"] .bg-theme-card {
+    border: var(--border-width) solid #000000;
+    box-shadow: var(--shadow);
+}
+
+[data-theme="ninos"] button,
+[data-theme="ninos"] a.btn {
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0px #000;
+}
+
+.card,
+.bg-theme-card {
+    background-color: var(--color-card);
     border-radius: var(--radius);
     transition: var(--transition);
 }
 
-.card {
-    background-color: var(--mode-bg-primary, var(--color-card, #FFFFFF));
-    border-radius: var(--radius);
-    border: 1px solid var(--mode-border, #E5E7EB);
+/* Textos */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--color-text);
 }
 
-/* Transiciones suaves al cambiar tema */
-* {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+p,
+span,
+div {
+    color: var(--color-text);
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+    border-radius: var(--radius);
+    border-width: var(--border-width, 1px);
 }
